@@ -1,26 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #ffffff;
+  --bg-secondary: #f2f3f5;
+  --text: #1b1d24;
+  --text-muted: #6b7280;
+  --green: #4e6e55;
+  --green-light: #6b8f71;
+  --green-bg: #eef3ef;
+  --border: #e2e5ed;
+  --border-input: #c4c8d8;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
 }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.prose p { margin-bottom: 0.75rem; }
+.prose p:last-child { margin-bottom: 0; }
+.prose ul { padding-left: 1.25rem; margin-bottom: 0.75rem; list-style: disc; }
+.prose ol { padding-left: 1.25rem; margin-bottom: 0.75rem; list-style: decimal; }
+.prose li { margin-bottom: 0.25rem; }
+.prose strong { font-weight: 600; }
+.prose h3 { font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem; margin-top: 1rem; }
+.prose h3:first-child { margin-top: 0; }
+.prose a { color: var(--green); text-decoration: underline; }
