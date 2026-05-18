@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
   try {
     const [chatResponse, restyledImageUrl] = await Promise.all([
       client.chat.completions.create({
-        model: "claude-sonnet-4.6",
+        model: "gpt-4o",
         max_tokens: 1500,
         messages,
       }),
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
           : m
       );
       const fallback = await client.chat.completions.create({
-        model: "claude-sonnet-4.6",
+        model: "gpt-4o",
         max_tokens: 1500,
         messages: textOnlyMessages,
       });
