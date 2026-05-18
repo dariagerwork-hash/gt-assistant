@@ -57,6 +57,7 @@ export default function ChatPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const id = localStorage.getItem("gt_user_id");
@@ -100,6 +101,7 @@ export default function ChatPage() {
     setInput("");
     setUploadedImage(null);
     setLoading(true);
+    abortControllerRef.current = new AbortController();
 
     setMessages((prev) => [
       ...prev,
@@ -113,6 +115,7 @@ export default function ChatPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: abortControllerRef.current.signal,
         body: JSON.stringify({
           leadId: userId,
           message: messageText,
@@ -130,15 +133,24 @@ export default function ChatPage() {
           restyledImage: data.restyledImageUrl,
         },
       ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev.slice(0, -1),
-        { role: "assistant", content: "Что-то пошло не так. Попробуй ещё раз." },
-      ]);
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") {
+        setMessages((prev) => prev.slice(0, -1));
+      } else {
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: "assistant", content: "Что-то пошло не так. Попробуй ещё раз." },
+        ]);
+      }
     } finally {
       setLoading(false);
+      abortControllerRef.current = null;
     }
   }, [input, loading, userId, uploadedImage, messages]);
+
+  const handleStop = () => {
+    abortControllerRef.current?.abort();
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
@@ -349,21 +361,38 @@ export default function ChatPage() {
                   onBlur={(e) => (e.target.style.borderColor = "#c4c8d8")}
                 />
 
-                <button
-                  onClick={() => sendMessage()}
-                  disabled={(!input.trim() && !uploadedImage) || loading}
-                  style={{
-                    width: 44, height: 44, borderRadius: 12, border: "none",
-                    background: (!input.trim() && !uploadedImage) || loading ? "#f2f3f5" : "#4e6e55",
-                    color: (!input.trim() && !uploadedImage) || loading ? "#9ca3af" : "#fff",
-                    cursor: (!input.trim() && !uploadedImage) || loading ? "default" : "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    flexShrink: 0, transition: "background 0.15s",
-                  }}
-                  aria-label="Отправить сообщение"
-                >
-                  <ArrowUp size={18} />
-                </button>
+                {loading ? (
+                  <button
+                    onClick={handleStop}
+                    aria-label="Остановить"
+                    style={{
+                      width: 44, height: 44, borderRadius: 12, border: "none",
+                      background: "#f2f3f5", color: "#1b1d24",
+                      cursor: "pointer", display: "flex", alignItems: "center",
+                      justifyContent: "center", flexShrink: 0, transition: "background 0.15s",
+                    }}
+                    onMouseOver={(e) => (e.currentTarget.style.background = "#e2e5ed")}
+                    onMouseOut={(e) => (e.currentTarget.style.background = "#f2f3f5")}
+                  >
+                    <div style={{ width: 14, height: 14, borderRadius: 3, background: "#1b1d24" }} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => sendMessage()}
+                    disabled={!input.trim() && !uploadedImage}
+                    aria-label="Отправить сообщение"
+                    style={{
+                      width: 44, height: 44, borderRadius: 12, border: "none",
+                      background: !input.trim() && !uploadedImage ? "#f2f3f5" : "#4e6e55",
+                      color: !input.trim() && !uploadedImage ? "#9ca3af" : "#fff",
+                      cursor: !input.trim() && !uploadedImage ? "default" : "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0, transition: "background 0.15s",
+                    }}
+                  >
+                    <ArrowUp size={18} />
+                  </button>
+                )}
               </div>
 
               <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 8, textAlign: "center" }}>
