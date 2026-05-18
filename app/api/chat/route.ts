@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
   });
 
   const hasImage = imageBase64 && imageMediaType && isAllowedMediaType(imageMediaType);
-  const wantsTransform = hasImage && isTransformRequest(message);
+  const wantsTransform = hasImage && (isTransformRequest(message) || isGenerateRequest(message));
   const wantsGenerate = !hasImage && isGenerateRequest(message);
 
   // Build messages in OpenAI format
