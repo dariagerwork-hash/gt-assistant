@@ -41,6 +41,6 @@ export async function POST(req: NextRequest) {
     }
   } catch (err) {
     console.error("fal.ai error:", err);
-    return NextResponse.json({ error: "Ошибка генерации изображения" }, { status: 500 });
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
