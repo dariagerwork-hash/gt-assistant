@@ -88,7 +88,19 @@ export default function ChatPage() {
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result as string;
-        resolve({ base64: result.split(",")[1], mediaType: file.type, preview: result });
+        const img = new Image();
+        img.onload = () => {
+          const MAX = 1024;
+          const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const compressed = canvas.toDataURL("image/jpeg", 0.82);
+          resolve({ base64: compressed.split(",")[1], mediaType: "image/jpeg", preview: compressed });
+        };
+        img.onerror = reject;
+        img.src = result;
       };
       reader.onerror = reject;
       reader.readAsDataURL(file);
