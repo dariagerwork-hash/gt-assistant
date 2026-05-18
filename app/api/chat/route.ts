@@ -5,7 +5,7 @@ import { addMessage, getLead } from "@/lib/db";
 import { SYSTEM_PROMPT } from "@/lib/system-prompt";
 
 const client = new OpenAI({
-  baseURL: process.env.OPENAI_BASE_URL || "https://openai.bothub.ru/v1",
+  baseURL: process.env.OPENAI_BASE_URL || "https://openai.bothub.chat/v1",
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
   try {
     const [chatResponse, restyledImageUrl] = await Promise.all([
       client.chat.completions.create({
-        model: "claude-sonnet-4-6",
+        model: "claude-sonnet-4.6",
         max_tokens: 1500,
         messages,
       }),
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
           : m
       );
       const fallback = await client.chat.completions.create({
-        model: "claude-sonnet-4-6",
+        model: "claude-sonnet-4.6",
         max_tokens: 1500,
         messages: textOnlyMessages,
       });
