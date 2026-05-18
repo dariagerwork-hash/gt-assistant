@@ -94,10 +94,9 @@ export default function ChatPage() {
     });
 
   const sendMessage = useCallback(async (text?: string, img?: typeof uploadedImage) => {
-    const messageText = text || input.trim();
-    if (!messageText || loading || !userId) return;
-
     const imageData = img !== undefined ? img : uploadedImage;
+    const messageText = text || input.trim() || (imageData ? "Проанализируй это фото" : "");
+    if (!messageText || loading || !userId) return;
     setInput("");
     setUploadedImage(null);
     setLoading(true);
