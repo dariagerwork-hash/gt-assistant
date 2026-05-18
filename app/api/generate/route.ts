@@ -46,12 +46,19 @@ export async function POST(req: NextRequest) {
 
     const fullPrompt = `Interior design photo: ${imagePrompt}. Photorealistic, 8k quality, professional interior photography, natural lighting.`;
     const encoded = encodeURIComponent(fullPrompt);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&nologo=true&enhance=true`;
+    const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&nologo=true&enhance=true&seed=${Date.now()}`;
 
-    const check = await fetch(imageUrl, { method: "HEAD" });
-    if (!check.ok) throw new Error("Image generation failed");
+    // Fetch the image to ensure it's generated before returning the URL
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new Error("Image generation failed");
 
-    return NextResponse.json({ imageUrl });
+    // Convert to base64 to avoid browser CORS/timing issues
+    const buffer = await response.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString("base64");
+    const contentType = response.headers.get("content-type") || "image/jpeg";
+    const dataUrl = `data:${contentType};base64,${base64}`;
+
+    return NextResponse.json({ imageUrl: dataUrl });
   } catch (err) {
     console.error("Generate error:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
