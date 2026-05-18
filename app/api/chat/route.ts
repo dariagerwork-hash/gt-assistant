@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
-import type { MessageParam } from "@anthropic-ai/sdk/resources/messages";
+import OpenAI from "openai";
 import { fal } from "@fal-ai/client";
 import { addMessage, getLead } from "@/lib/db";
 import { SYSTEM_PROMPT } from "@/lib/system-prompt";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({
+  baseURL: process.env.OPENAI_BASE_URL || "https://openai.bothub.ru/v1",
+  apiKey: process.env.OPENAI_API_KEY!,
+});
 
 const ALLOWED_MEDIA_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"] as const;
 type AllowedMediaType = typeof ALLOWED_MEDIA_TYPES[number];
@@ -13,7 +15,6 @@ function isAllowedMediaType(t: string): t is AllowedMediaType {
   return ALLOWED_MEDIA_TYPES.includes(t as AllowedMediaType);
 }
 
-// Keywords that indicate the user wants image transformation (not just analysis)
 const TRANSFORM_KEYWORDS = [
   "сделай", "примени", "переделай", "преобразуй", "измени", "покажи как будет",
   "стиль", "japandi", "скандинавский", "loft", "лофт", "минимализм", "бохо", "boho",
@@ -63,47 +64,42 @@ export async function POST(req: NextRequest) {
     imageUrl: imageBase64 ? "uploaded" : undefined,
   });
 
-  // If image + transformation intent → generate restyle in parallel with Claude response
   const hasImage = imageBase64 && imageMediaType && isAllowedMediaType(imageMediaType);
   const wantsTransform = hasImage && isTransformRequest(message);
 
-  // Build Claude messages
-  const messages: MessageParam[] = (history || []).slice(-20).map(
-    (m: { role: string; content: string }) => ({
+  // Build messages in OpenAI format
+  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+    { role: "system", content: SYSTEM_PROMPT },
+    ...(history || []).slice(-20).map((m: { role: string; content: string }) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
-    })
-  );
+    })),
+  ];
 
-  const userContent = hasImage
-    ? [
-        { type: "image" as const, source: { type: "base64" as const, media_type: imageMediaType as AllowedMediaType, data: imageBase64 } },
-        { type: "text" as const, text: message },
-      ]
-    : message;
-
-  if (messages.length > 0 && messages[messages.length - 1].role === "user") {
-    messages[messages.length - 1] = { role: "user", content: userContent };
+  // Add current user message (with image if present)
+  if (hasImage) {
+    messages.push({
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${imageMediaType};base64,${imageBase64}` } },
+        { type: "text", text: message },
+      ],
+    });
   } else {
-    messages.push({ role: "user", content: userContent });
+    messages.push({ role: "user", content: message });
   }
 
   try {
-    // Run Claude + fal.ai in parallel if transform is needed
-    const [claudeResponse, restyledImageUrl] = await Promise.all([
-      client.messages.create({
+    const [chatResponse, restyledImageUrl] = await Promise.all([
+      client.chat.completions.create({
         model: "claude-sonnet-4-6",
         max_tokens: 1500,
-        system: SYSTEM_PROMPT,
         messages,
       }),
       wantsTransform ? generateRestyle(imageBase64, imageMediaType, message) : Promise.resolve(null),
     ]);
 
-    const assistantText = claudeResponse.content
-      .filter((b) => b.type === "text")
-      .map((b) => (b as { type: "text"; text: string }).text)
-      .join("");
+    const assistantText = chatResponse.choices[0]?.message?.content || "";
 
     await addMessage(leadId, { role: "assistant", content: assistantText });
 
