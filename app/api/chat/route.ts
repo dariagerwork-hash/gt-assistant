@@ -22,9 +22,39 @@ const TRANSFORM_KEYWORDS = [
   "светлее", "темнее", "цвет", "переделать", "как выглядел бы", "визуализируй",
 ];
 
+const GENERATE_KEYWORDS = [
+  "покажи", "нарисуй", "сгенерируй", "визуализируй", "создай изображение",
+  "как выглядит", "как выглядел бы", "пример интерьера", "пример дизайна",
+  "интерьер в стиле", "дизайн в стиле", "покажи пример",
+];
+
 function isTransformRequest(message: string): boolean {
   const lower = message.toLowerCase();
   return TRANSFORM_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+function isGenerateRequest(message: string): boolean {
+  const lower = message.toLowerCase();
+  return GENERATE_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+async function generateImage(prompt: string): Promise<string | null> {
+  if (!process.env.FAL_KEY) return null;
+  try {
+    fal.config({ credentials: process.env.FAL_KEY });
+    const result = await fal.subscribe("fal-ai/flux/dev", {
+      input: {
+        prompt: `Interior design photo: ${prompt}. Photorealistic, 8k quality, professional interior photography, natural lighting.`,
+        num_inference_steps: 28,
+        guidance_scale: 3.5,
+        num_images: 1,
+      },
+    }) as { images?: Array<{ url: string }> };
+    return result?.images?.[0]?.url ?? null;
+  } catch (err) {
+    console.error("fal.ai generate error:", err);
+    return null;
+  }
 }
 
 async function generateRestyle(imageBase64: string, imageMediaType: string, prompt: string): Promise<string | null> {
@@ -66,6 +96,7 @@ export async function POST(req: NextRequest) {
 
   const hasImage = imageBase64 && imageMediaType && isAllowedMediaType(imageMediaType);
   const wantsTransform = hasImage && isTransformRequest(message);
+  const wantsGenerate = !hasImage && isGenerateRequest(message);
 
   // Build messages in OpenAI format
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -90,13 +121,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const [chatResponse, restyledImageUrl] = await Promise.all([
+    const [chatResponse, restyledImageUrl, generatedImageUrl] = await Promise.all([
       client.chat.completions.create({
         model: "gpt-4o",
         max_tokens: 1500,
         messages,
       }),
       wantsTransform ? generateRestyle(imageBase64, imageMediaType, message) : Promise.resolve(null),
+      wantsGenerate ? generateImage(message) : Promise.resolve(null),
     ]);
 
     let assistantText = chatResponse.choices[0]?.message?.content || "";
@@ -120,7 +152,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       reply: assistantText,
-      restyledImageUrl: restyledImageUrl ?? undefined,
+      restyledImageUrl: restyledImageUrl ?? generatedImageUrl ?? undefined,
     });
   } catch (err) {
     console.error("API error:", err);
