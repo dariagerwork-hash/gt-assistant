@@ -42,11 +42,10 @@ async function generateImage(prompt: string): Promise<string | null> {
   if (!process.env.FAL_KEY) return null;
   try {
     fal.config({ credentials: process.env.FAL_KEY });
-    const result = await fal.subscribe("fal-ai/flux/dev", {
+    const result = await fal.subscribe("fal-ai/flux/schnell", {
       input: {
         prompt: `Interior design photo: ${prompt}. Photorealistic, 8k quality, professional interior photography, natural lighting.`,
-        num_inference_steps: 28,
-        guidance_scale: 3.5,
+        num_inference_steps: 4,
         num_images: 1,
       },
     }) as { images?: Array<{ url: string }> };
