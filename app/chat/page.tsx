@@ -421,16 +421,9 @@ export default function ChatPage() {
         accept="image/*"
         style={{ display: "none" }}
         onChange={async (e) => {
-          const file = e.target.files?.[0];
-          console.log("file selected:", file?.name, file?.type, file?.size);
-          if (file) {
-            try {
-              const data = await fileToBase64(file);
-              console.log("base64 ready, length:", data.base64.length);
-              setUploadedImage(data);
-            } catch (err) {
-              console.error("fileToBase64 error:", err);
-            }
+          if (e.target.files?.[0]) {
+            const data = await fileToBase64(e.target.files[0]);
+            setUploadedImage(data);
           }
         }}
       />
