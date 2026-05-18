@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { fal } from "@fal-ai/client";
 import { addMessage, getLead } from "@/lib/db";
 import { SYSTEM_PROMPT } from "@/lib/system-prompt";
+
+export const maxDuration = 30;
 
 const client = new OpenAI({
   baseURL: process.env.OPENAI_BASE_URL || "https://openai.bothub.chat/v1",
@@ -38,45 +39,6 @@ function isGenerateRequest(message: string): boolean {
   return GENERATE_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
-async function generateImage(prompt: string): Promise<string | null> {
-  if (!process.env.FAL_KEY) return null;
-  try {
-    fal.config({ credentials: process.env.FAL_KEY });
-    const result = await fal.subscribe("fal-ai/flux/schnell", {
-      input: {
-        prompt: `Interior design photo: ${prompt}. Photorealistic, 8k quality, professional interior photography, natural lighting.`,
-        num_inference_steps: 4,
-        num_images: 1,
-      },
-    }) as { images?: Array<{ url: string }> };
-    return result?.images?.[0]?.url ?? null;
-  } catch (err) {
-    console.error("fal.ai generate error:", err);
-    return null;
-  }
-}
-
-async function generateRestyle(imageBase64: string, imageMediaType: string, prompt: string): Promise<string | null> {
-  if (!process.env.FAL_KEY) return null;
-  try {
-    fal.config({ credentials: process.env.FAL_KEY });
-    const dataUrl = `data:${imageMediaType};base64,${imageBase64}`;
-    const result = await fal.subscribe("fal-ai/flux/dev/image-to-image", {
-      input: {
-        image_url: dataUrl,
-        prompt: `Interior design: ${prompt}. Photorealistic, 8k quality, interior photography.`,
-        strength: 0.75,
-        num_inference_steps: 28,
-        guidance_scale: 3.5,
-      },
-    }) as { images?: Array<{ url: string }> };
-    return result?.images?.[0]?.url ?? null;
-  } catch (err) {
-    console.error("fal.ai error:", err);
-    return null;
-  }
-}
-
 export async function POST(req: NextRequest) {
   const { leadId, message, imageBase64, imageMediaType, history } = await req.json();
 
@@ -97,7 +59,6 @@ export async function POST(req: NextRequest) {
   const wantsTransform = hasImage && (isTransformRequest(message) || isGenerateRequest(message));
   const wantsGenerate = !hasImage && isGenerateRequest(message);
 
-  // Build messages in OpenAI format
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
     { role: "system", content: SYSTEM_PROMPT },
     ...(history || []).slice(-20).map((m: { role: string; content: string }) => ({
@@ -106,7 +67,6 @@ export async function POST(req: NextRequest) {
     })),
   ];
 
-  // Add current user message (with image if present)
   if (hasImage) {
     messages.push({
       role: "user",
@@ -120,19 +80,15 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const [chatResponse, restyledImageUrl, generatedImageUrl] = await Promise.all([
-      client.chat.completions.create({
-        model: "gpt-4o",
-        max_tokens: 1500,
-        messages,
-      }),
-      wantsTransform ? generateRestyle(imageBase64, imageMediaType, message) : Promise.resolve(null),
-      wantsGenerate ? generateImage(message) : Promise.resolve(null),
-    ]);
+    let assistantText = "";
 
-    let assistantText = chatResponse.choices[0]?.message?.content || "";
+    const chatResponse = await client.chat.completions.create({
+      model: "gpt-4o",
+      max_tokens: 1500,
+      messages,
+    });
+    assistantText = chatResponse.choices[0]?.message?.content || "";
 
-    // Fallback: if image was sent but response is empty, retry without image
     if (!assistantText && hasImage) {
       const textOnlyMessages = messages.map((m) =>
         m.role === "user" && Array.isArray(m.content)
@@ -151,7 +107,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       reply: assistantText,
-      restyledImageUrl: restyledImageUrl ?? generatedImageUrl ?? undefined,
+      generatePrompt: wantsGenerate ? message : undefined,
+      transformRequest: wantsTransform ? { imageBase64, imageMediaType, prompt: message } : undefined,
     });
   } catch (err) {
     console.error("API error:", err);

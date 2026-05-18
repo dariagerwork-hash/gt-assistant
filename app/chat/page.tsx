@@ -9,6 +9,7 @@ interface Message {
   imagePreview?: string;
   restyledImage?: string;
   loading?: boolean;
+  generatingImage?: boolean;
 }
 
 const GT_INFO = [
@@ -137,14 +138,37 @@ export default function ChatPage() {
         }),
       });
       const data = await res.json();
+
       setMessages((prev) => [
         ...prev.slice(0, -1),
         {
           role: "assistant",
           content: data.reply || data.error || "Ошибка",
-          restyledImage: data.restyledImageUrl,
+          generatingImage: !!(data.generatePrompt || data.transformRequest),
         },
       ]);
+
+      if (data.generatePrompt || data.transformRequest) {
+        const genBody = data.transformRequest
+          ? { prompt: data.transformRequest.prompt, imageBase64: data.transformRequest.imageBase64, imageMediaType: data.transformRequest.imageMediaType }
+          : { prompt: data.generatePrompt };
+
+        const genRes = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(genBody),
+        });
+        const genData = await genRes.json();
+
+        setMessages((prev) => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last?.role === "assistant") {
+            updated[updated.length - 1] = { ...last, generatingImage: false, restyledImage: genData.imageUrl ?? undefined };
+          }
+          return updated;
+        });
+      }
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") {
         setMessages((prev) => prev.slice(0, -1));
@@ -303,6 +327,14 @@ export default function ChatPage() {
                       <div className="prose" dangerouslySetInnerHTML={{ __html: formatText(msg.content) }} />
                     )}
                   </div>
+                  {msg.generatingImage && (
+                    <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, color: "#6b7280", fontSize: 13 }}>
+                      {[0, 1, 2].map((n) => (
+                        <div key={n} style={{ width: 6, height: 6, borderRadius: "50%", background: "#9ab89f", animation: `bounce 1s ${n * 0.2}s infinite` }} />
+                      ))}
+                      <span>Генерирую изображение...</span>
+                    </div>
+                  )}
                   {msg.restyledImage && (
                     <div style={{ marginTop: 12, maxWidth: "85%" }}>
                       <img src={msg.restyledImage} alt="restyled" style={{ width: "100%", borderRadius: 16 }} />
