@@ -99,7 +99,22 @@ export async function POST(req: NextRequest) {
       wantsTransform ? generateRestyle(imageBase64, imageMediaType, message) : Promise.resolve(null),
     ]);
 
-    const assistantText = chatResponse.choices[0]?.message?.content || "";
+    let assistantText = chatResponse.choices[0]?.message?.content || "";
+
+    // Fallback: if image was sent but response is empty, retry without image
+    if (!assistantText && hasImage) {
+      const textOnlyMessages = messages.map((m) =>
+        m.role === "user" && Array.isArray(m.content)
+          ? { ...m, content: message }
+          : m
+      );
+      const fallback = await client.chat.completions.create({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1500,
+        messages: textOnlyMessages,
+      });
+      assistantText = fallback.choices[0]?.message?.content || "";
+    }
 
     await addMessage(leadId, { role: "assistant", content: assistantText });
 
