@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fal } from "@fal-ai/client";
+import OpenAI from "openai";
 
 export const maxDuration = 60;
+
+const client = new OpenAI({
+  baseURL: process.env.OPENAI_BASE_URL || "https://openai.bothub.chat/v1",
+  apiKey: process.env.OPENAI_API_KEY!,
+});
 
 export async function POST(req: NextRequest) {
   const { prompt, imageBase64, imageMediaType } = await req.json();
@@ -10,37 +15,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Не указан prompt" }, { status: 400 });
   }
 
-  if (!process.env.FAL_KEY) {
-    return NextResponse.json({ error: "FAL_KEY не настроен" }, { status: 500 });
-  }
-
-  fal.config({ credentials: process.env.FAL_KEY });
-
   try {
-    if (imageBase64 && imageMediaType) {
-      const dataUrl = `data:${imageMediaType};base64,${imageBase64}`;
-      const result = await fal.subscribe("fal-ai/flux/dev/image-to-image", {
-        input: {
-          image_url: dataUrl,
-          prompt: `Interior design: ${prompt}. Photorealistic, 8k quality, interior photography.`,
-          strength: 0.75,
-          num_inference_steps: 28,
-          guidance_scale: 3.5,
-        },
-      }) as { images?: Array<{ url: string }> };
-      return NextResponse.json({ imageUrl: result?.images?.[0]?.url ?? null });
-    } else {
-      const result = await fal.subscribe("fal-ai/flux/schnell", {
-        input: {
-          prompt: `Interior design photo: ${prompt}. Photorealistic, 8k quality, professional interior photography, natural lighting.`,
-          num_inference_steps: 4,
-          num_images: 1,
-        },
-      }) as { images?: Array<{ url: string }> };
-      return NextResponse.json({ imageUrl: result?.images?.[0]?.url ?? null });
-    }
+    const fullPrompt = imageBase64
+      ? `Interior design photo, restyled: ${prompt}. Photorealistic, 8k quality, professional interior photography.`
+      : `Interior design photo: ${prompt}. Photorealistic, 8k quality, professional interior photography, natural lighting.`;
+
+    const response = await client.images.generate({
+      model: "dall-e-3",
+      prompt: fullPrompt,
+      n: 1,
+      size: "1024x1024",
+    });
+
+    const imageUrl = response.data[0]?.url ?? null;
+    return NextResponse.json({ imageUrl });
   } catch (err) {
-    console.error("fal.ai error:", err);
+    console.error("DALL-E error:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
