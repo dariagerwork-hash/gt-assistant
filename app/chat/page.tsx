@@ -433,7 +433,7 @@ export default function ChatPage() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Спросите про планировки, ипотеку, интерьер... или загрузите фото"
+                  placeholder="Вопрос или фото..."
                   rows={1}
                   style={{
                     flex: 1, padding: "12px 14px", border: "1px solid #c4c8d8", borderRadius: 12,
