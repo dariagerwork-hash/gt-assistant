@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     let assistantText = "";
 
     const chatResponse = await client.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-5.2",
       max_tokens: 1500,
       messages,
     });
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
           : m
       );
       const fallback = await client.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-5.2",
         max_tokens: 1500,
         messages: textOnlyMessages,
       });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 
 export const maxDuration = 60;
 
@@ -16,49 +16,40 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    let imagePrompt = prompt;
+    let imageUrl: string;
 
-    if (imageBase64 && imageMediaType) {
-      // Ask gpt-4o to describe the room so Pollinations can recreate it in the new style
-      const description = await client.chat.completions.create({
-        model: "gpt-4o",
-        max_tokens: 300,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "image_url",
-                image_url: { url: `data:${imageMediaType};base64,${imageBase64}` },
-              },
-              {
-                type: "text",
-                text: "Опиши эту комнату максимально подробно на английском: размер, планировка, мебель, цвета, освещение. Только описание, без лишних слов.",
-              },
-            ],
-          },
-        ],
+    if (imageBase64) {
+      const buffer = Buffer.from(imageBase64, "base64");
+      const imageFile = await toFile(buffer, "room.jpg", { type: imageMediaType || "image/jpeg" });
+
+      const result = await client.images.edit({
+        model: "gpt-image-1",
+        image: imageFile,
+        prompt: `Interior design: ${prompt}. Photorealistic, high quality, professional interior photography.`,
+        n: 1,
+        size: "1024x1024",
       });
 
-      const roomDescription = description.choices[0]?.message?.content || "";
-      imagePrompt = `${roomDescription}, redesigned in style: ${prompt}`;
+      const img = result.data[0];
+      imageUrl = img.b64_json
+        ? `data:image/png;base64,${img.b64_json}`
+        : (img.url ?? "");
+    } else {
+      const result = await client.images.generate({
+        model: "gpt-image-1",
+        prompt: `Interior design: ${prompt}. Photorealistic, 4K quality, professional interior photography, natural lighting.`,
+        n: 1,
+        size: "1024x1024",
+      });
+
+      const img = result.data[0];
+      imageUrl = img.b64_json
+        ? `data:image/png;base64,${img.b64_json}`
+        : (img.url ?? "");
     }
 
-    const fullPrompt = `Interior design photo: ${imagePrompt}. Photorealistic, 8k quality, professional interior photography, natural lighting.`;
-    const encoded = encodeURIComponent(fullPrompt);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&nologo=true&enhance=true&seed=${Date.now()}`;
-
-    // Fetch the image to ensure it's generated before returning the URL
-    const response = await fetch(imageUrl);
-    if (!response.ok) throw new Error("Image generation failed");
-
-    // Convert to base64 to avoid browser CORS/timing issues
-    const buffer = await response.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString("base64");
-    const contentType = response.headers.get("content-type") || "image/jpeg";
-    const dataUrl = `data:${contentType};base64,${base64}`;
-
-    return NextResponse.json({ imageUrl: dataUrl });
+    if (!imageUrl) throw new Error("No image in response");
+    return NextResponse.json({ imageUrl });
   } catch (err) {
     console.error("Generate error:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
