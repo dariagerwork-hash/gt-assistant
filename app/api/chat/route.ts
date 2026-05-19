@@ -108,8 +108,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       reply: assistantText,
-      generatePrompt: wantsGenerate ? message : undefined,
-      transformRequest: wantsTransform ? { imageBase64, imageMediaType, prompt: message } : undefined,
+      generatePrompt: wantsGenerate ? assistantText : undefined,
+      transformRequest: wantsTransform ? { imageBase64, imageMediaType, prompt: assistantText } : undefined,
     });
   } catch (err) {
     console.error("API error:", err);
