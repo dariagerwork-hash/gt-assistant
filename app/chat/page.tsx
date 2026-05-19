@@ -213,19 +213,58 @@ export default function ChatPage() {
       <header style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "0 16px", height: 56, borderBottom: "1px solid #e2e5ed", flexShrink: 0,
+        position: "relative",
       }}>
-        <span style={{ fontWeight: 700, fontSize: 15, color: "#1b1d24" }}>Город Талантов</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setShowAccount((v) => !v)}
+              style={{
+                width: 32, height: 32, borderRadius: "50%",
+                background: showAccount ? "#4e6e55" : "#1b1d24",
+                border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#fff", fontSize: 13, fontWeight: 700, fontFamily: "inherit",
+                flexShrink: 0, transition: "background 0.15s",
+              }}
+            >
+              {userName ? userName[0].toUpperCase() : "?"}
+            </button>
+            {showAccount && (
+              <div style={{
+                position: "absolute", top: 40, left: 0,
+                background: "#fff", borderRadius: 16, padding: "16px 20px",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.12)", minWidth: 220,
+                border: "1px solid #e2e5ed", zIndex: 50,
+              }}>
+                <div style={{ marginBottom: 12 }}>
+                  <p style={{ fontWeight: 700, fontSize: 15, color: "#1b1d24", marginBottom: 2 }}>{userName}</p>
+                  {userPhone && <p style={{ fontSize: 13, color: "#6b7280" }}>{userPhone}</p>}
+                </div>
+                <div style={{ height: 1, background: "#e2e5ed", marginBottom: 12 }} />
+                <button onClick={handleLogout} style={{
+                  width: "100%", padding: "9px 0", borderRadius: 10, border: "none",
+                  background: "#f2f3f5", color: "#1b1d24", fontSize: 13, fontWeight: 600,
+                  cursor: "pointer", fontFamily: "inherit", textAlign: "center",
+                }}>
+                  Выйти
+                </button>
+              </div>
+            )}
+          </div>
+          <span style={{ fontWeight: 700, fontSize: 15, color: "#1b1d24" }}>Город Талантов</span>
+        </div>
         <button
           onClick={() => setActiveTab(activeTab === "gt" ? "chat" : "gt")}
           style={{
-            padding: "6px 16px", borderRadius: 100, border: "none",
+            padding: "6px 14px", borderRadius: 100, border: "none",
             background: activeTab === "gt" ? "#4e6e55" : "#f2f3f5",
             color: activeTab === "gt" ? "#fff" : "#6b7280",
             fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-            transition: "background 0.15s, color 0.15s",
+            transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap",
           }}
         >
-          {activeTab === "gt" ? "← Назад" : "О Городе Талантов"}
+          {activeTab === "gt" ? "← Назад" : "О проекте"}
         </button>
       </header>
 
@@ -460,50 +499,11 @@ export default function ChatPage() {
         }}
       />
 
-      {/* Account widget — bottom left */}
-      <div style={{ position: "fixed", bottom: "calc(20px + env(safe-area-inset-bottom, 0px))", left: 20, zIndex: 40 }}>
-        {showAccount && (
-          <div style={{
-            position: "absolute", bottom: 52, left: 0,
-            background: "#fff", borderRadius: 16, padding: "16px 20px",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.12)", minWidth: 220,
-            border: "1px solid #e2e5ed",
-          }}>
-            <div style={{ marginBottom: 12 }}>
-              <p style={{ fontWeight: 700, fontSize: 15, color: "#1b1d24", marginBottom: 2 }}>{userName}</p>
-              {userPhone && <p style={{ fontSize: 13, color: "#6b7280" }}>{userPhone}</p>}
-            </div>
-            <div style={{ height: 1, background: "#e2e5ed", marginBottom: 12 }} />
-            <button onClick={handleLogout} style={{
-              width: "100%", padding: "9px 0", borderRadius: 10, border: "none",
-              background: "#f2f3f5", color: "#1b1d24", fontSize: 13, fontWeight: 600,
-              cursor: "pointer", fontFamily: "inherit", textAlign: "center",
-            }}>
-              Выйти
-            </button>
-          </div>
-        )}
-        <button
-          onClick={() => setShowAccount((v) => !v)}
-          style={{
-            width: 40, height: 40, borderRadius: "50%",
-            background: showAccount ? "#4e6e55" : "#1b1d24",
-            border: "none", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontSize: 15, fontWeight: 700, fontFamily: "inherit",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-            transition: "background 0.15s",
-          }}
-        >
-          {userName ? userName[0].toUpperCase() : "?"}
-        </button>
-      </div>
-
       {/* Close account on outside click */}
       {showAccount && (
         <div
           onClick={() => setShowAccount(false)}
-          style={{ position: "fixed", inset: 0, zIndex: 39 }}
+          style={{ position: "fixed", inset: 0, zIndex: 49 }}
         />
       )}
 
