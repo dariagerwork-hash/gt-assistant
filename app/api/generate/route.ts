@@ -50,8 +50,9 @@ export async function POST(req: NextRequest) {
 
     if (!imageUrl) throw new Error("No image in response");
     return NextResponse.json({ imageUrl });
-  } catch (err) {
-    console.error("Generate error:", err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Generate error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
