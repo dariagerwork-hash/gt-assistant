@@ -10,6 +10,7 @@ const client = new OpenAI({
 
 export async function POST(req: NextRequest) {
   const { prompt, imageBase64, imageMediaType } = await req.json();
+  console.log("[generate] called, hasImage:", !!imageBase64, "promptLen:", prompt?.length);
 
   if (!prompt) {
     return NextResponse.json({ error: "Не указан prompt" }, { status: 400 });
