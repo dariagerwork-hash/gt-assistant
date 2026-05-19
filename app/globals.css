@@ -13,13 +13,42 @@
   --border-input: #c4c8d8;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #__next {
+  height: 100%;
+}
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+button, input, textarea {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fix iOS bounce scroll */
+.chat-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Safe area for iPhone notch / home indicator */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Full dynamic viewport height — fixes iOS address bar issue */
+.full-height {
+  height: 100dvh;
+  height: 100vh; /* fallback */
 }
 
 ::-webkit-scrollbar { width: 6px; }

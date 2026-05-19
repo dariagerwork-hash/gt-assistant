@@ -208,11 +208,11 @@ export default function ChatPage() {
       .replace(/\n/g, "<br/>");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#fff" }}>
+    <div className="full-height" style={{ display: "flex", flexDirection: "column", background: "#fff" }}>
       {/* Header */}
       <header style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 24px", height: 56, borderBottom: "1px solid #e2e5ed", flexShrink: 0,
+        padding: "0 16px", height: 56, borderBottom: "1px solid #e2e5ed", flexShrink: 0,
       }}>
         <span style={{ fontWeight: 700, fontSize: 15, color: "#1b1d24" }}>Город Талантов</span>
         <button
@@ -231,7 +231,7 @@ export default function ChatPage() {
 
       {/* GT Tab */}
       {activeTab === "gt" && (
-        <div style={{ flex: 1, overflowY: "auto", padding: "32px 24px", maxWidth: 720, margin: "0 auto", width: "100%" }}>
+        <div className="chat-scroll" style={{ flex: 1, padding: "24px 16px", maxWidth: 720, margin: "0 auto", width: "100%" }}>
           <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", color: "#6b8f71", textTransform: "uppercase", marginBottom: 16 }}>
             Город Талантов · Кемерово
           </p>
@@ -259,10 +259,10 @@ export default function ChatPage() {
       {/* Chat Tab */}
       {activeTab === "chat" && (
         <>
-          <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
+          <div className="chat-scroll" style={{ flex: 1, padding: "16px" }}>
             <div style={{ maxWidth: 720, margin: "0 auto" }}>
               {messages.length === 0 && (
-                <div style={{ textAlign: "center", paddingTop: 48, paddingBottom: 32 }}>
+                <div className="gt-empty-top" style={{ textAlign: "center", paddingTop: 48, paddingBottom: 32 }}>
                   <div style={{
                     width: 56, height: 56, borderRadius: 16, background: "#eef3ef",
                     display: "flex", alignItems: "center", justifyContent: "center",
@@ -270,10 +270,10 @@ export default function ChatPage() {
                   }}>
                     <Home size={24} color="#4e6e55" />
                   </div>
-                  <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1b1d24", marginBottom: 8, fontFamily: "var(--font-lora), Georgia, serif" }}>
+                  <h2 className="gt-empty-title" style={{ fontSize: 22, fontWeight: 700, color: "#1b1d24", marginBottom: 8, fontFamily: "var(--font-lora), Georgia, serif" }}>
                     {userName ? `Привет, ${userName}!` : "Привет!"}
                   </h2>
-                  <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.6, maxWidth: 380, margin: "0 auto 32px" }}>
+                  <p className="gt-empty-desc" style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.6, maxWidth: 380, margin: "0 auto 32px" }}>
                     Помогу с выбором жилья, анализом планировок, ипотекой и дизайном интерьера.
                     Загружай фото — разберём вместе.
                   </p>
@@ -306,7 +306,7 @@ export default function ChatPage() {
                       maxWidth: 260, borderRadius: 12, marginBottom: 8, objectFit: "cover",
                     }} />
                   )}
-                  <div style={{
+                  <div className="gt-msg-bubble" style={{
                     maxWidth: "85%",
                     padding: msg.role === "user" ? "10px 16px" : "14px 18px",
                     borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
@@ -347,7 +347,7 @@ export default function ChatPage() {
           </div>
 
           {/* Input */}
-          <div style={{ borderTop: "1px solid #e2e5ed", padding: "12px 24px 16px", flexShrink: 0 }}>
+          <div className="safe-bottom" style={{ borderTop: "1px solid #e2e5ed", padding: "12px 16px 16px", flexShrink: 0 }}>
             <div style={{ maxWidth: 720, margin: "0 auto" }}>
               {uploadedImage && (
                 <div style={{
@@ -439,7 +439,7 @@ export default function ChatPage() {
                 )}
               </div>
 
-              <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 8, textAlign: "center" }}>
+              <p className="gt-hint" style={{ fontSize: 11, color: "#9ca3af", marginTop: 8, textAlign: "center" }}>
                 Загрузи планировку или фото интерьера — напиши что сделать, получишь анализ или визуализацию
               </p>
             </div>
@@ -461,7 +461,7 @@ export default function ChatPage() {
       />
 
       {/* Account widget — bottom left */}
-      <div style={{ position: "fixed", bottom: 20, left: 20, zIndex: 40 }}>
+      <div style={{ position: "fixed", bottom: "calc(20px + env(safe-area-inset-bottom, 0px))", left: 20, zIndex: 40 }}>
         {showAccount && (
           <div style={{
             position: "absolute", bottom: 52, left: 0,
@@ -511,6 +511,13 @@ export default function ChatPage() {
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-4px); }
+        }
+        @media (max-width: 480px) {
+          .gt-empty-title { font-size: 20px !important; }
+          .gt-empty-desc { font-size: 13px !important; margin-bottom: 20px !important; }
+          .gt-empty-top { padding-top: 24px !important; padding-bottom: 16px !important; }
+          .gt-hint { display: none; }
+          .gt-msg-bubble { max-width: 92% !important; }
         }
       `}</style>
     </div>

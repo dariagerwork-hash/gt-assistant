@@ -45,7 +45,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#fff", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100dvh", background: "#fff", display: "flex", flexDirection: "column" }}>
       {/* Header */}
       <header style={{
         padding: "16px 24px",
@@ -119,6 +119,7 @@ export default function AuthPage() {
               </label>
               <input
                 type="text"
+                autoComplete="name"
                 placeholder="Ваше имя"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -152,6 +153,8 @@ export default function AuthPage() {
               </label>
               <input
                 type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
                 placeholder="+7 (___) ___-__-__"
                 value={phone}
                 onChange={(e) => setPhone(formatPhone(e.target.value))}
@@ -175,26 +178,25 @@ export default function AuthPage() {
               <p style={{ color: "#e53e3e", fontSize: 14, marginBottom: 16 }}>{error}</p>
             )}
 
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  background: loading ? "#9ab89f" : "#4e6e55",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 100,
-                  padding: "14px 32px",
-                  fontSize: 15,
-                  fontWeight: 600,
-                  cursor: loading ? "default" : "pointer",
-                  transition: "background 0.15s",
-                  fontFamily: "inherit",
-                }}
-              >
-                {loading ? "Загружаем..." : "Начать →"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: "100%",
+                background: loading ? "#9ab89f" : "#4e6e55",
+                color: "#fff",
+                border: "none",
+                borderRadius: 100,
+                padding: "16px 32px",
+                fontSize: 15,
+                fontWeight: 600,
+                cursor: loading ? "default" : "pointer",
+                transition: "background 0.15s",
+                fontFamily: "inherit",
+              }}
+            >
+              {loading ? "Загружаем..." : "Начать →"}
+            </button>
           </form>
         </div>
       </main>
