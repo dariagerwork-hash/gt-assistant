@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       const imageFile = await toFile(buffer, "room.jpg", { type: imageMediaType || "image/jpeg" });
 
       const result = await client.images.edit({
-        model: "gpt-image-1",
+        model: "nano-banana-2",
         image: imageFile,
         prompt: `Interior design: ${prompt}. Photorealistic, high quality, professional interior photography.`,
         n: 1,
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         : (img.url ?? "");
     } else {
       const result = await client.images.generate({
-        model: "gpt-image-1",
+        model: "nano-banana-2",
         prompt: `Interior design: ${prompt}. Photorealistic, 4K quality, professional interior photography, natural lighting.`,
         n: 1,
         size: "1024x1024",
