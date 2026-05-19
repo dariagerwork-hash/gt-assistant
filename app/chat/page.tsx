@@ -208,7 +208,7 @@ export default function ChatPage() {
       .replace(/\n/g, "<br/>");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#fff" }}>
+    <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", background: "#fff" }}>
       {/* Header */}
       <header style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
