@@ -208,7 +208,7 @@ export default function ChatPage() {
       .replace(/\n/g, "<br/>");
 
   return (
-    <div className="full-height" style={{ display: "flex", flexDirection: "column", background: "#fff" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#fff" }}>
       {/* Header */}
       <header style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -270,7 +270,7 @@ export default function ChatPage() {
 
       {/* GT Tab */}
       {activeTab === "gt" && (
-        <div className="chat-scroll" style={{ flex: 1, padding: "24px 16px", maxWidth: 720, margin: "0 auto", width: "100%" }}>
+        <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" as never, overscrollBehavior: "contain", padding: "24px 16px", maxWidth: 720, margin: "0 auto", width: "100%" }}>
           <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", color: "#6b8f71", textTransform: "uppercase", marginBottom: 16 }}>
             Город Талантов · Кемерово
           </p>
@@ -298,7 +298,7 @@ export default function ChatPage() {
       {/* Chat Tab */}
       {activeTab === "chat" && (
         <>
-          <div className="chat-scroll" style={{ flex: 1, padding: "16px" }}>
+          <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" as never, overscrollBehavior: "contain", padding: "16px" }}>
             <div style={{ maxWidth: 720, margin: "0 auto" }}>
               {messages.length === 0 && (
                 <div className="gt-empty-top" style={{ textAlign: "center", paddingTop: 48, paddingBottom: 32 }}>
@@ -386,7 +386,7 @@ export default function ChatPage() {
           </div>
 
           {/* Input */}
-          <div className="safe-bottom" style={{ borderTop: "1px solid #e2e5ed", padding: "12px 16px 16px", flexShrink: 0 }}>
+          <div style={{ borderTop: "1px solid #e2e5ed", padding: "12px 16px", paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))", flexShrink: 0 }}>
             <div style={{ maxWidth: 720, margin: "0 auto" }}>
               {uploadedImage && (
                 <div style={{
